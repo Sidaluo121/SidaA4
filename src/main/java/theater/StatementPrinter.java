@@ -39,9 +39,8 @@ public class StatementPrinter {
         final NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
 
         for (Performance perf : invoice.getPerformances()) {
-            final Play play = plays.get(perf.getPlayID());
 
-            final int thisAmount = calculateAmount(play, perf);
+            final int thisAmount = calculateAmount(perf);
 
             // volume credits
             volumeCredits += Math.max(
@@ -49,7 +48,7 @@ public class StatementPrinter {
                     0
             );
 
-            if ("comedy".equals(play.getType())) {
+            if ("comedy".equals(getPlay(perf).getType())) {
                 volumeCredits += perf.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
             }
 
@@ -60,7 +59,7 @@ public class StatementPrinter {
             result.append(
                     String.format(
                             "  %s: %s (%s seats)%n",
-                            play.getName(),
+                            getPlay(perf).getName(),
                             formattedAmount,
                             perf.getAudience()
                     )
@@ -82,24 +81,21 @@ public class StatementPrinter {
         return result.toString();
     }
 
+    private Play getPlay(Performance perf) {
+        return plays.get(perf.getPlayID());
+    }
+
     /**
      * Calculates the charge for a single performance.
      *
-     * @param play the play being performed
      * @param perf the performance instance
      * @return the cost in cents
      * @throws IllegalArgumentException if the play type is unknown
      */
-    private int calculateAmount(Play play, Performance perf) {
+    private int calculateAmount(Performance perf) {
         final int audience = perf.getAudience();
-        final String type = play.getType();
+        final String type = getPlay(perf).getType();
 
-        final int result = getAmount(type, audience);
-
-        return result;
-    }
-
-    private static int getAmount(String type, int audience) {
         int result;
 
         switch (type) {
@@ -124,6 +120,7 @@ public class StatementPrinter {
             default:
                 throw new IllegalArgumentException("unknown type: " + type);
         }
+
         return result;
     }
 
