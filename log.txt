@@ -1,1 +1,13 @@
-249172c (HEAD -> main, origin/main, origin/HEAD) Initial commit
+michaelluo@michaeldeMacBook-Air SidaA4 % git log
+commit f96b3a47f44a395ea323edfd2dce95132e3b7a29 (HEAD -> main, origin/main, origin/HEAD)
+Author: Sida Luo <sida.luo@mail.utoronto.ca>
+Date:   Sat Nov 15 13:05:28 2025 -0500
+
+    Task 2.4
+
+commit b6b13862a6bf4e53e4ef642689c126eea3184900
+Author: Sida Luo <sida.luo@mail.utoronto.ca>
+Date:   Sat Nov 15 12:53:17 2025 -0500
+
+    Task 2.3
+:
