@@ -36,7 +36,7 @@ public class StatementPrinter {
 
         for (Performance perf : invoice.getPerformances()) {
 
-            final int thisAmount = calculateAmount(perf);
+            final int thisAmount = getAmount(perf);
 
             // volume credits
 
@@ -62,13 +62,13 @@ public class StatementPrinter {
                 )
         );
         result.append(
-                String.format("You earned %s credits%n", getVolumeCredits())
+                String.format("You earned %s credits%n", getTotalVolumeCredits())
         );
 
         return result.toString();
     }
 
-    private int getVolumeCredits() {
+    private int getTotalVolumeCredits() {
         int volumeCredits = 0;
 
         for (Performance perf : invoice.getPerformances()) {
@@ -94,7 +94,7 @@ public class StatementPrinter {
         int totalAmount = 0;
 
         for (Performance perf : invoice.getPerformances()) {
-            totalAmount += calculateAmount(perf);
+            totalAmount += getAmount(perf);
         }
         return totalAmount;
     }
@@ -115,7 +115,7 @@ public class StatementPrinter {
      * @return the cost in cents
      * @throws IllegalArgumentException if the play type is unknown
      */
-    private int calculateAmount(Performance perf) {
+    private int getAmount(Performance perf) {
         final int audience = perf.getAudience();
         final String type = getPlay(perf).getType();
 
