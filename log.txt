@@ -1,3 +1,4 @@
+ded9896 Task 1.2
 653069c Task 1.1
 3e3647f 000
 b965da7 name change
