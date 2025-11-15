@@ -5,64 +5,121 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * This class generates a statement for a given invoice of performances.
+ * Generates a plaintext statement from an invoice.
  */
-public class StatementPrinter {
-    public Invoice invoice;
-    public Map<String, Play> plays;
 
+public class StatementPrinter {
+
+    private final Invoice invoice;
+    private final Map<String, Play> plays;
+
+    /**
+     * Constructs a StatementPrinter.
+     *
+     * @param invoice the invoice to print
+     * @param plays   a map of playID to Play objects
+     */
     public StatementPrinter(Invoice invoice, Map<String, Play> plays) {
         this.invoice = invoice;
         this.plays = plays;
     }
 
     /**
-     * Returns a formatted statement of the invoice associated with this printer.
+     * Returns the formatted statement for this invoice.
+     *
      * @return the formatted statement
-     * @throws RuntimeException if one of the play types is not known
      */
     public String statement() {
         int totalAmount = 0;
         int volumeCredits = 0;
-        StringBuilder result = new StringBuilder("Statement for " + invoice.getCustomer() + System.lineSeparator());
 
-        NumberFormat frmt = NumberFormat.getCurrencyInstance(Locale.US);
+        final StringBuilder result =
+                new StringBuilder("Statement for " + invoice.getCustomer() + System.lineSeparator());
 
-        for (Performance p : invoice.getPerformances()) {
-            Play play = plays.get(p.playID);
+        final NumberFormat formatter = NumberFormat.getCurrencyInstance(Locale.US);
 
-            int thisAmount = 0;
-            switch (play.type) {
-                case "tragedy":
-                    thisAmount = 40000;
-                    if (p.audience > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
-                        thisAmount += 1000 * (p.audience - 30);
-                    }
-                    break;
-                case "comedy":
-                    thisAmount = Constants.COMEDY_BASE_AMOUNT;
-                    if (p.audience > Constants.COMEDY_AUDIENCE_THRESHOLD) {
-                        thisAmount += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
-                                + (Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
-                                * (p.audience - Constants.COMEDY_AUDIENCE_THRESHOLD));
-                    }
-                    thisAmount += Constants.COMEDY_AMOUNT_PER_AUDIENCE * p.audience;
-                    break;
-                default:
-                    throw new RuntimeException(String.format("unknown type: %s", play.type));
+        for (Performance perf : invoice.getPerformances()) {
+            final Play play = plays.get(perf.getPlayID());
+
+            final int thisAmount = calculateAmount(play, perf);
+
+            // volume credits
+            volumeCredits += Math.max(
+                    perf.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD,
+                    0
+            );
+
+            if ("comedy".equals(play.getType())) {
+                volumeCredits += perf.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
             }
 
-            // add volume credits
-            volumeCredits += Math.max(p.audience - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-            // add extra credit for every five comedy attendees
-            if ("comedy".equals(play.type)) volumeCredits += p.audience / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+            final String formattedAmount =
+                    formatter.format(thisAmount / Constants.PERCENT_FACTOR);
 
-            // print line for this order
-            result.append(String.format("  %s: %s (%s seats)%n", play.name, frmt.format(thisAmount / 100), p.audience));
+            // print line for this performance
+            result.append(
+                    String.format(
+                            "  %s: %s (%s seats)%n",
+                            play.getName(),
+                            formattedAmount,
+                            perf.getAudience()
+                    )
+            );
+
             totalAmount += thisAmount;
         }
-        result.append(String.format("Amount owed is %s%n", frmt.format(totalAmount / 100)));
-        result.append(String.format("You earned %s credits%n", volumeCredits));
+
+        result.append(
+                String.format(
+                        "Amount owed is %s%n",
+                        formatter.format(totalAmount / Constants.PERCENT_FACTOR)
+                )
+        );
+        result.append(
+                String.format("You earned %s credits%n", volumeCredits)
+        );
+
         return result.toString();
     }
+
+    /**
+     * Calculates the charge for a single performance.
+     *
+     * @param play the play being performed
+     * @param perf the performance instance
+     * @return the cost in cents
+     * @throws IllegalArgumentException if the play type is unknown
+     */
+    private int calculateAmount(Play play, Performance perf) {
+        final int audience = perf.getAudience();
+        final String type = play.getType();
+
+        int result;
+
+        switch (type) {
+            case "tragedy":
+                result = Constants.TRAGEDY_BASE_AMOUNT;
+                if (audience > Constants.TRAGEDY_AUDIENCE_THRESHOLD) {
+                    result += Constants.TRAGEDY_OVER_BASE_CAPACITY_PER_PERSON
+                            * (audience - Constants.TRAGEDY_AUDIENCE_THRESHOLD);
+                }
+                break;
+
+            case "comedy":
+                result = Constants.COMEDY_BASE_AMOUNT;
+                if (audience > Constants.COMEDY_AUDIENCE_THRESHOLD) {
+                    result += Constants.COMEDY_OVER_BASE_CAPACITY_AMOUNT
+                            + Constants.COMEDY_OVER_BASE_CAPACITY_PER_PERSON
+                            * (audience - Constants.COMEDY_AUDIENCE_THRESHOLD);
+                }
+                result += Constants.COMEDY_AMOUNT_PER_AUDIENCE * audience;
+                break;
+
+            default:
+                throw new IllegalArgumentException("unknown type: " + type);
+        }
+
+        return result;
+    }
+
 }
