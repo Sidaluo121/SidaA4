@@ -94,6 +94,12 @@ public class StatementPrinter {
         final int audience = perf.getAudience();
         final String type = play.getType();
 
+        final int result = getAmount(type, audience);
+
+        return result;
+    }
+
+    private static int getAmount(String type, int audience) {
         int result;
 
         switch (type) {
@@ -118,7 +124,6 @@ public class StatementPrinter {
             default:
                 throw new IllegalArgumentException("unknown type: " + type);
         }
-
         return result;
     }
 
