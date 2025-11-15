@@ -6,7 +6,7 @@ package theater;
 public class Performance {
 
     private final String playID;
-    int audience;
+    private final int audience;
 
     /**
      * Constructs a performance.
