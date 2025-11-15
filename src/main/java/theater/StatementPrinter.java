@@ -43,14 +43,7 @@ public class StatementPrinter {
             final int thisAmount = calculateAmount(perf);
 
             // volume credits
-            volumeCredits += Math.max(
-                    perf.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD,
-                    0
-            );
-
-            if ("comedy".equals(getPlay(perf).getType())) {
-                volumeCredits += perf.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-            }
+            volumeCredits += getVolumeCredits(perf);
 
             final String formattedAmount =
                     formatter.format(thisAmount / Constants.PERCENT_FACTOR);
@@ -79,6 +72,19 @@ public class StatementPrinter {
         );
 
         return result.toString();
+    }
+
+    private int getVolumeCredits(Performance perf) {
+        int result = 0;
+        result += Math.max(
+                perf.getAudience() - Constants.BASE_VOLUME_CREDIT_THRESHOLD,
+                0
+        );
+
+        if ("comedy".equals(getPlay(perf).getType())) {
+            result += perf.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+        return result;
     }
 
     private Play getPlay(Performance perf) {
